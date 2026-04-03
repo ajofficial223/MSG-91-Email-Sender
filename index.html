@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MSG91 Email Sender</title>
+    <meta name="description" content="Professional email sending dashboard with MSG91 API and SMTP support.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+                    <rect width="32" height="32" rx="8" fill="url(#logo-g)"/>
+                    <path d="M8 11L16 16L24 11" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M8 11V21H24V11" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <defs><linearGradient id="logo-g" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#4F46E5"/><stop offset="1" stop-color="#0EA5E9"/></linearGradient></defs>
+                </svg>
+                <span class="logo-text">MSG91 Sender</span>
+            </div>
+            <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-group">
+                <span class="nav-group-label">Configuration</span>
+                <button class="nav-item active" data-tab="api-settings" onclick="switchTab('api-settings')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    <span>API Settings</span>
+                </button>
+                <button class="nav-item" data-tab="smtp-settings" onclick="switchTab('smtp-settings')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <span>SMTP Settings</span>
+                </button>
+            </div>
+
+            <div class="nav-group">
+                <span class="nav-group-label">Template</span>
+                <button class="nav-item" data-tab="builder" onclick="switchTab('builder')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                    <span>HTML Builder</span>
+                </button>
+                <button class="nav-item" data-tab="templates" onclick="switchTab('templates')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    <span>Saved Templates</span>
+                    <span class="nav-badge" id="templateCount">0</span>
+                </button>
+            </div>
+
+            <div class="nav-group">
+                <span class="nav-group-label">Sending</span>
+                <button class="nav-item" data-tab="recipients" onclick="switchTab('recipients')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span>Recipients</span>
+                    <span class="nav-badge" id="recipientCount">0</span>
+                </button>
+                <button class="nav-item" data-tab="send" onclick="switchTab('send')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    <span>Send Emails</span>
+                </button>
+            </div>
+
+            <div class="nav-group">
+                <span class="nav-group-label">Reports</span>
+                <button class="nav-item" data-tab="logs" onclick="switchTab('logs')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                    <span>Send Logs</span>
+                    <span class="nav-badge error hidden" id="failedBadge">0</span>
+                </button>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="status-pill" id="connectionStatus">
+                <span class="status-dot"></span>
+                <span class="status-label">Not Configured</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-wrapper">
+        <!-- Top Bar -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <h1 class="page-title" id="pageTitle">API Settings</h1>
+                <span class="page-subtitle" id="pageSubtitle">Configure your MSG91 credentials</span>
+            </div>
+            <div class="topbar-right">
+                <div class="send-mode-group">
+                    <span class="mode-lbl" id="apiLabel">MSG91 API</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="sendModeToggle" onchange="toggleSendMode()">
+                        <span class="toggle-track">
+                            <span class="toggle-thumb"></span>
+                        </span>
+                    </label>
+                    <span class="mode-lbl" id="smtpLabel">SMTP</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="content-area">
+
+            <!-- ============= API SETTINGS ============= -->
+            <section class="tab-panel active" id="panel-api-settings">
+                <div class="form-page">
+                    <div class="form-section">
+                        <div class="section-head">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            <div>
+                                <h3>Authentication</h3>
+                                <p>Your MSG91 API credentials</p>
+                            </div>
+                        </div>
+                        <div class="form-body">
+                            <div class="field-row">
+                                <div class="field-group">
+                                    <label for="authKey">Auth Key <span class="req">*</span></label>
+                                    <div class="input-wrap">
+                                        <input type="password" id="authKey" placeholder="Enter MSG91 Auth Key" autocomplete="off">
+                                        <button class="eye-btn" onclick="toggleEye('authKey',this)" title="Show/Hide">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        </button>
+                                    </div>
+                                    <span class="hint">Find in MSG91 Dashboard → API Keys</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-head">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                            <div>
+                                <h3>Sender Details</h3>
+                                <p>Domain & sender identity for API mode</p>
+                            </div>
+                        </div>
+                        <div class="form-body">
+                            <div class="field-row two-col">
+                                <div class="field-group">
+                                    <label for="domain">Verified Domain <span class="req">*</span></label>
+                                    <input type="text" id="domain" placeholder="e.g. yourdomain.com">
+                                    <span class="hint">Must be verified in MSG91</span>
+                                </div>
+                                <div class="field-group">
+                                    <label for="templateId">Template ID <span class="req">*</span></label>
+                                    <input type="text" id="templateId" placeholder="e.g. support_v1">
+                                    <span class="hint">From MSG91 → Email → Templates</span>
+                                </div>
+                            </div>
+                            <div class="field-row two-col">
+                                <div class="field-group">
+                                    <label for="senderName">Sender Name <span class="req">*</span></label>
+                                    <input type="text" id="senderName" placeholder="e.g. Your Company">
+                                </div>
+                                <div class="field-group">
+                                    <label for="senderEmail">Sender Email <span class="req">*</span></label>
+                                    <input type="email" id="senderEmail" placeholder="no-reply@yourdomain.com">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn btn-primary" onclick="saveApiSettings()">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                            Save API Settings
+                        </button>
+                        <button class="btn btn-ghost" onclick="clearApiSettings()">Reset</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============= SMTP SETTINGS ============= -->
+            <section class="tab-panel" id="panel-smtp-settings">
+                <div class="form-page">
+                    <div class="form-section">
+                        <div class="section-head">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            <div>
+                                <h3>SMTP Connection</h3>
+                                <p>Configure your SMTP server to send emails directly</p>
+                            </div>
+                        </div>
+                        <div class="form-body">
+                            <div class="info-box">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                <span>For MSG91 SMTP, use <strong>smtp.mailer91.com</strong> on port <strong>587</strong> with your domain email & password from MSG91 → Domain Settings → SMTP Integration.</span>
+                            </div>
+                            <div class="field-row two-col">
+                                <div class="field-group">
+                                    <label for="smtpHost">SMTP Hostname <span class="req">*</span></label>
+                                    <input type="text" id="smtpHost" placeholder="smtp.mailer91.com">
+                                </div>
+                                <div class="field-group">
+                                    <label for="smtpPort">Port</label>
+                                    <input type="number" id="smtpPort" placeholder="587" value="587">
+                                </div>
+                            </div>
+                            <div class="field-row two-col">
+                                <div class="field-group">
+                                    <label for="smtpUser">Username / Email <span class="req">*</span></label>
+                                    <input type="text" id="smtpUser" placeholder="mailer@yourdomain.com">
+                                </div>
+                                <div class="field-group">
+                                    <label for="smtpPass">Password <span class="req">*</span></label>
+                                    <div class="input-wrap">
+                                        <input type="password" id="smtpPass" autocomplete="off" placeholder="SMTP Password">
+                                        <button class="eye-btn" onclick="toggleEye('smtpPass',this)" title="Show/Hide">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field-row">
+                                <div class="field-group">
+                                    <div class="checkbox-row">
+                                        <input type="checkbox" id="smtpSecure">
+                                        <label for="smtpSecure">Use secure TLS (port 465). Leave unchecked for STARTTLS (port 587)</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-head">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            <div>
+                                <h3>Sender Identity (SMTP)</h3>
+                                <p>From name and email used in SMTP mode</p>
+                            </div>
+                        </div>
+                        <div class="form-body">
+                            <div class="field-row two-col">
+                                <div class="field-group">
+                                    <label for="smtpFromName">From Name</label>
+                                    <input type="text" id="smtpFromName" placeholder="e.g. Your Company">
+                                    <span class="hint">Defaults to API sender name if empty</span>
+                                </div>
+                                <div class="field-group">
+                                    <label for="smtpFromEmail">From Email</label>
+                                    <input type="email" id="smtpFromEmail" placeholder="no-reply@yourdomain.com">
+                                    <span class="hint">Defaults to API sender email if empty</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn btn-primary" onclick="saveSmtpSettings()">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                            Save SMTP Settings
+                        </button>
+                        <button class="btn btn-outline" onclick="testSmtpConnection()">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            Test Connection
+                        </button>
+                        <button class="btn btn-ghost" onclick="clearSmtpSettings()">Reset</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============= HTML BUILDER ============= -->
+            <section class="tab-panel" id="panel-builder">
+                <div class="builder-layout">
+                    <div class="builder-top-bar">
+                        <div class="field-group" style="flex:1; max-width:500px;">
+                            <label for="emailSubject">Email Subject <span class="req">*</span></label>
+                            <input type="text" id="emailSubject" placeholder="e.g. Hello {{UserName}}, your order is ready!" oninput="onBuilderInput()">
+                        </div>
+                        <div class="builder-actions">
+                            <button class="btn btn-outline btn-sm" onclick="loadTemplateToBuilder()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                Load Template
+                            </button>
+                            <button class="btn btn-primary btn-sm" onclick="saveCurrentTemplate()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+                                Save Template
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="builder-detected-vars" id="detectedVarsBar" style="display:none;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                        <span>Auto-detected variables:</span>
+                        <div class="detected-var-tags" id="detectedVarTags"></div>
+                    </div>
+
+                    <div class="builder-split">
+                        <div class="builder-editor-pane">
+                            <div class="pane-header">
+                                <span>HTML Editor</span>
+                                <div class="pane-actions">
+                                    <button class="btn-icon" onclick="clearHtmlEditor()" title="Clear">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <textarea id="htmlEditor" placeholder="<html>&#10;<body>&#10;  <h1>Hello {{UserName}}</h1>&#10;  <p>Welcome to our platform!</p>&#10;</body>&#10;</html>" spellcheck="false" oninput="onBuilderInput()"></textarea>
+                        </div>
+
+                        <div class="builder-preview-pane">
+                            <div class="pane-header">
+                                <span>Live Preview</span>
+                                <button class="btn-icon" onclick="refreshPreview()" title="Refresh">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>
+                                </button>
+                            </div>
+                            <div class="preview-wrap">
+                                <iframe id="previewFrame" title="Email Preview" sandbox="allow-same-origin"></iframe>
+                                <div class="preview-placeholder" id="previewPlaceholder">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+                                    <p>Start typing HTML to see the preview</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============= SAVED TEMPLATES ============= -->
+            <section class="tab-panel" id="panel-templates">
+                <div class="content-page">
+                    <div class="content-toolbar">
+                        <div class="search-wrap">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            <input type="text" id="templateSearch" placeholder="Search templates..." oninput="filterTemplates(this.value)">
+                        </div>
+                    </div>
+
+                    <div id="templateGrid" class="template-grid"></div>
+                    <div class="empty-state" id="noTemplates">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        <h4>No templates saved yet</h4>
+                        <p>Build an email in the HTML Builder and click "Save Template"</p>
+                        <button class="btn btn-primary" onclick="switchTab('builder')">Go to Builder</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============= RECIPIENTS ============= -->
+            <section class="tab-panel" id="panel-recipients">
+                <div class="content-page">
+                    <div class="content-body-split">
+                        <!-- Add Recipients -->
+                        <div class="add-panel">
+                            <div class="form-section">
+                                <div class="section-head-sm">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                                    <h4>Add Manually</h4>
+                                </div>
+                                <div class="form-body">
+                                    <div class="field-row two-col">
+                                        <div class="field-group">
+                                            <label for="recipName">Name</label>
+                                            <input type="text" id="recipName" placeholder="Recipient name">
+                                        </div>
+                                        <div class="field-group">
+                                            <label for="recipEmail">Email <span class="req">*</span></label>
+                                            <input type="email" id="recipEmail" placeholder="email@example.com">
+                                        </div>
+                                    </div>
+                                    <div id="recipVarFields"></div>
+                                    <button class="btn btn-primary btn-full" onclick="addRecipient()">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                        Add Recipient
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="divider-or">OR</div>
+
+                            <div class="form-section">
+                                <div class="section-head-sm">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    <h4>Import CSV</h4>
+                                </div>
+                                <div class="form-body">
+                                    <div class="dropzone" id="dropZone">
+                                        <input type="file" id="csvFile" accept=".csv" onchange="handleCSVUpload(event)">
+                                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                        <p>Drop CSV file here or <span class="link-text">browse</span></p>
+                                        <small>Format: name, email, var1, var2...</small>
+                                    </div>
+                                    <textarea id="csvPaste" rows="3" placeholder="Or paste CSV data here:&#10;name, email, UserName&#10;John, john@example.com, John"></textarea>
+                                    <button class="btn btn-outline btn-full" onclick="parseCsvPaste()">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                                        Parse & Import
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recipient List -->
+                        <div class="list-panel">
+                            <div class="list-header">
+                                <h4>Recipient List <span class="count-badge" id="totalRecipients">0</span></h4>
+                                <div class="list-header-actions">
+                                    <button class="btn btn-ghost btn-sm danger" onclick="clearAllRecipients()" id="clearAllBtn" style="display:none;">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                        Clear All
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="scrollable-list">
+                                <table class="data-table" id="recipientTable" style="display:none;">
+                                    <thead>
+                                        <tr>
+                                            <th width="36"><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"></th>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>Variables</th>
+                                            <th width="70">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recipientTableBody"></tbody>
+                                </table>
+                                <div class="empty-state" id="noRecipients">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                                    <h4>No recipients yet</h4>
+                                    <p>Add recipients manually or import a CSV file</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============= SEND ============= -->
+            <section class="tab-panel" id="panel-send">
+                <div class="content-page">
+                    <!-- Stats Row -->
+                    <div class="stats-row" id="sendStatsRow">
+                        <div class="stat-card">
+                            <div class="stat-icon indigo">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                            </div>
+                            <div>
+                                <div class="stat-val" id="sendTotalRecipients">0</div>
+                                <div class="stat-lbl">Recipients</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon sky">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            </div>
+                            <div>
+                                <div class="stat-val" id="sendTemplateId" style="font-size:0.85rem;">—</div>
+                                <div class="stat-lbl">Template / Subject</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon emerald">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            </div>
+                            <div>
+                                <div class="stat-val" id="sendModeDisplay">API</div>
+                                <div class="stat-lbl">Send Mode</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Send Cards -->
+                    <div class="send-grid">
+                        <div class="send-card">
+                            <div class="send-card-icon bulk">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                            </div>
+                            <h4>Send All (Bulk)</h4>
+                            <p>Send to all recipients in a single batch request</p>
+                            <button class="btn btn-primary btn-full" id="btnSendBulk" onclick="sendBulk()">
+                                Send Bulk Email
+                            </button>
+                        </div>
+
+                        <div class="send-card">
+                            <div class="send-card-icon orange">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                            </div>
+                            <h4>Send One-by-One</h4>
+                            <p>Send sequentially with a configurable delay</p>
+                            <div class="field-group" style="margin-bottom:12px;">
+                                <label for="sendDelay">Delay between sends (seconds)</label>
+                                <input type="number" id="sendDelay" value="2" min="0" max="60">
+                            </div>
+                            <button class="btn btn-outline btn-full" id="btnSendSeq" onclick="sendSequential()">
+                                Start Sequential
+                            </button>
+                            <div class="progress-bar-wrap hidden" id="seqProgress">
+                                <div class="progress-track">
+                                    <div class="progress-fill" id="progressFill"></div>
+                                </div>
+                                <div class="progress-meta">
+                                    <span id="progressText">0 / 0</span>
+                                    <button class="btn btn-ghost btn-sm danger" onclick="stopSequential()">Stop</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="send-card">
+                            <div class="send-card-icon violet">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            </div>
+                            <h4>Send to Individual</h4>
+                            <p>Pick a single recipient and send now</p>
+                            <div class="field-group" style="margin-bottom:12px;">
+                                <label for="individualSelect">Select Recipient</label>
+                                <select id="individualSelect">
+                                    <option value="">— Choose recipient —</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-outline btn-full" id="btnSendIndividual" onclick="sendIndividual()">
+                                Send to Selected
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Preview -->
+                    <div class="preview-card" id="previewCard">
+                        <div class="preview-card-header">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                            <span>Request Preview</span>
+                            <button class="btn btn-ghost btn-sm" onclick="copyPreview()">Copy</button>
+                        </div>
+                        <pre id="apiPreview"><code>Configure settings and add recipients to see the request preview.</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============= LOGS ============= -->
+            <section class="tab-panel" id="panel-logs">
+                <div class="content-page">
+                    <div class="stats-row">
+                        <div class="stat-card clickable" onclick="filterLogs('all')">
+                            <div class="stat-icon slate"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div>
+                            <div><div class="stat-val" id="statTotal">0</div><div class="stat-lbl">Total</div></div>
+                        </div>
+                        <div class="stat-card clickable" onclick="filterLogs('success')">
+                            <div class="stat-icon emerald"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+                            <div><div class="stat-val" id="statSuccess">0</div><div class="stat-lbl">Success</div></div>
+                        </div>
+                        <div class="stat-card clickable" onclick="filterLogs('failed')">
+                            <div class="stat-icon red"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+                            <div><div class="stat-val" id="statFailed">0</div><div class="stat-lbl">Failed</div></div>
+                        </div>
+                        <div class="stat-card clickable" onclick="filterLogs('pending')">
+                            <div class="stat-icon amber"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+                            <div><div class="stat-val" id="statPending">0</div><div class="stat-lbl">Pending</div></div>
+                        </div>
+                    </div>
+
+                    <div class="table-card">
+                        <div class="table-card-header">
+                            <h4>Send Logs</h4>
+                            <div class="table-card-actions">
+                                <select id="logFilter" onchange="filterLogs(this.value)" class="select-sm">
+                                    <option value="all">All Logs</option>
+                                    <option value="success">Success</option>
+                                    <option value="failed">Failed</option>
+                                    <option value="pending">Pending</option>
+                                </select>
+                                <button class="btn btn-outline btn-sm" onclick="exportLogs()">Export CSV</button>
+                                <button class="btn btn-ghost btn-sm danger" onclick="clearLogs()">Clear</button>
+                            </div>
+                        </div>
+                        <div class="table-wrap">
+                            <table class="data-table" id="logsTable" style="display:none;">
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Mode</th>
+                                        <th>Status</th>
+                                        <th>Response</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="logsTableBody"></tbody>
+                            </table>
+                            <div class="empty-state" id="noLogs">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                                <h4>No logs yet</h4>
+                                <p>Logs will appear here after sending emails</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Save Template Modal -->
+    <div class="modal-overlay hidden" id="saveTemplateModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Save Template</h3>
+                <button class="modal-close" onclick="closeModal('saveTemplateModal')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="field-group">
+                    <label for="templateName">Template Name <span class="req">*</span></label>
+                    <input type="text" id="templateName" placeholder="e.g. Welcome Email, Order Confirmation...">
+                </div>
+                <div class="field-group">
+                    <label for="templateDescription">Description (optional)</label>
+                    <input type="text" id="templateDescription" placeholder="Brief description of this template">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('saveTemplateModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmSaveTemplate()">Save Template</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Template Modal -->
+    <div class="modal-overlay hidden" id="loadTemplateModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Load Template</h3>
+                <button class="modal-close" onclick="closeModal('loadTemplateModal')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="loadTemplateList" class="template-select-list"></div>
+                <div class="empty-state small" id="noLoadTemplates" style="display:none;">
+                    <p>No templates saved yet. Go to HTML Builder to create one.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+This project only uses core Node.js modules, so there is no need to run `npm install`.
+
+To run the server and the frontend locally, simply execute the following command in this directory:
+
+node proxy.js
+
+After running this command, open your browser and navigate to:
+http://localhost:3091
+
+To stop the server at any time, press:
+Ctrl + C
